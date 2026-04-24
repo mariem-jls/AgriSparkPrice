@@ -1,11 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import joblib
 import numpy as np
 import pandas as pd
 import os
 import unicodedata
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 MODEL_CANDIDATES = [
     os.getenv("PRICE_MODEL_PATH", "").strip(),
@@ -241,6 +243,72 @@ def predire_prix(area_code, item_code, year, price_lag1, price_ma_3, crise_2008=
     return PRICE_MODEL.predict(input_data)[0]
 
 
+def run_forecast(area_name, item_name, base_year, num_future, price_minus2, price_minus1, base_price):
+    if PRICE_MODEL is None:
+        raise ValueError("Modele de prix non charge.")
+
+    area_code = COUNTRY_MAP.get(area_name)
+    if area_code is None:
+        raise ValueError("Pays non reconnu.")
+
+    item_code = ITEM_MAP.get(item_name)
+    if item_code is None:
+        raise ValueError("Produit non reconnu.")
+
+    if num_future < 1:
+        raise ValueError("Nombre d'annees futures doit etre au moins 1.")
+
+    recent_prices = [price_minus2, price_minus1, base_price]
+    predictions = []
+    current_year = base_year + 1
+
+    for _ in range(num_future):
+        lag1 = recent_prices[-1]
+        ma3 = sum(recent_prices[-3:]) / 3
+        pred = predire_prix(area_code, item_code, current_year, lag1, ma3)
+        pred_rounded = round(pred, 1)
+        predictions.append((current_year, pred_rounded))
+        recent_prices.append(pred_rounded)
+        current_year += 1
+
+    all_prices = [base_price] + [p[1] for p in predictions]
+    variations = []
+    for i in range(1, len(all_prices)):
+        var = (all_prices[i] - all_prices[i - 1]) / all_prices[i - 1] * 100
+        variations.append(round(var, 1))
+
+    variation_totale = (all_prices[-1] - base_price) / base_price * 100 if len(all_prices) > 1 else 0
+    variation_totale = round(variation_totale, 1)
+
+    tendances = []
+    for var in variations:
+        if var > 0:
+            tendances.append("Hausse")
+        elif var < 0:
+            tendances.append("Baisse")
+        else:
+            tendances.append("Stabilisation")
+
+    if variation_totale > 0:
+        tendance_globale = "Hausse"
+    elif variation_totale < 0:
+        tendance_globale = "Baisse"
+    else:
+        tendance_globale = "Stable"
+
+    return {
+        "item": item_name,
+        "country": area_name,
+        "base_year": base_year,
+        "base_price": round(base_price, 1),
+        "predictions": predictions,
+        "variations": variations,
+        "variation_totale": variation_totale,
+        "tendances": tendances,
+        "tendance_globale": tendance_globale,
+    }
+
+
 @app.route("/")
 def index():
     return redirect(url_for("price_prediction"))
@@ -254,79 +322,23 @@ def price_prediction():
     if request.method == "POST":
         form_data = request.form.to_dict()
         try:
-            if PRICE_MODEL is None:
-                raise ValueError("Modele de prix non charge.")
-
             area_name = request.form["area_name"]
-            area_code = COUNTRY_MAP.get(area_name)
-            if area_code is None:
-                raise ValueError("Pays non reconnu.")
-
             item_name = request.form["item_name"]
-            item_code = ITEM_MAP.get(item_name)
-            if item_code is None:
-                raise ValueError("Produit non reconnu.")
-
             base_year = int(request.form["base_year"])
             num_future = int(request.form["num_future"])
-            if num_future < 1:
-                raise ValueError("Nombre d'annees futures doit etre au moins 1.")
-
             price_minus2 = float(request.form["price_minus2"])
             price_minus1 = float(request.form["price_minus1"])
             base_price = float(request.form["base_price"])
-            recent_prices = [price_minus2, price_minus1, base_price]
 
-            predictions = []
-            current_year = base_year + 1
-
-            for _ in range(num_future):
-                lag1 = recent_prices[-1]
-                ma3 = sum(recent_prices[-3:]) / 3
-                pred = predire_prix(area_code, item_code, current_year, lag1, ma3)
-                pred_rounded = round(pred, 1)
-                predictions.append((current_year, pred_rounded))
-                recent_prices.append(pred_rounded)
-                current_year += 1
-
-            all_prices = [base_price] + [p[1] for p in predictions]
-            variations = []
-            for i in range(1, len(all_prices)):
-                var = (all_prices[i] - all_prices[i - 1]) / all_prices[i - 1] * 100
-                variations.append(round(var, 1))
-
-            variation_totale = (
-                (all_prices[-1] - base_price) / base_price * 100 if len(all_prices) > 1 else 0
+            results = run_forecast(
+                area_name=area_name,
+                item_name=item_name,
+                base_year=base_year,
+                num_future=num_future,
+                price_minus2=price_minus2,
+                price_minus1=price_minus1,
+                base_price=base_price,
             )
-            variation_totale = round(variation_totale, 1)
-
-            tendances = []
-            for var in variations:
-                if var > 0:
-                    tendances.append("Hausse")
-                elif var < 0:
-                    tendances.append("Baisse")
-                else:
-                    tendances.append("Stabilisation")
-
-            if variation_totale > 0:
-                tendance_globale = "Hausse"
-            elif variation_totale < 0:
-                tendance_globale = "Baisse"
-            else:
-                tendance_globale = "Stable"
-
-            results = {
-                "item": item_name,
-                "country": area_name,
-                "base_year": base_year,
-                "base_price": round(base_price, 1),
-                "predictions": predictions,
-                "variations": variations,
-                "variation_totale": variation_totale,
-                "tendances": tendances,
-                "tendance_globale": tendance_globale,
-            }
         except Exception as e:
             results = {"error": str(e)}
 
@@ -337,6 +349,51 @@ def price_prediction():
         countries=COUNTRY_OPTIONS,
         items=ITEM_OPTIONS,
     )
+
+
+@app.route("/api/meta", methods=["GET"])
+def api_meta():
+    return jsonify({
+        "countries": COUNTRY_OPTIONS,
+        "items": ITEM_OPTIONS,
+        "model_loaded": PRICE_MODEL is not None,
+    })
+
+
+@app.route("/api/predict/price", methods=["POST"])
+def api_predict_price():
+    payload = request.get_json(silent=True) or {}
+    try:
+        area_name = str(payload.get("area_name", "")).strip()
+        item_name = str(payload.get("item_name", "")).strip()
+        base_year = int(payload.get("base_year"))
+        num_future = int(payload.get("num_future"))
+        price_minus2 = float(payload.get("price_minus2"))
+        price_minus1 = float(payload.get("price_minus1"))
+        base_price = float(payload.get("base_price"))
+
+        if not area_name or not item_name:
+            raise ValueError("area_name et item_name sont obligatoires.")
+
+        result = run_forecast(
+            area_name=area_name,
+            item_name=item_name,
+            base_year=base_year,
+            num_future=num_future,
+            price_minus2=price_minus2,
+            price_minus1=price_minus1,
+            base_price=base_price,
+        )
+
+        api_predictions = [{"year": y, "price": p} for y, p in result["predictions"]]
+        api_result = {
+            **result,
+            "predictions": api_predictions,
+            "tendance_globale": result["tendance_globale"].lower(),
+        }
+        return jsonify(api_result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 if __name__ == "__main__":
