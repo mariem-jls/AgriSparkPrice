@@ -1,0 +1,14 @@
+# Créez un script create_favicon.py
+from PIL import Image, ImageDraw
+import os
+
+# Créer une image simple
+img = Image.new('RGB', (64, 64), color = (39, 174, 96))  # Vert AgriSpark
+draw = ImageDraw.Draw(img)
+
+# Dessiner un symbole de plante
+draw.ellipse([16, 16, 48, 48], fill=(255, 255, 255))
+draw.ellipse([20, 20, 44, 44], fill=(39, 174, 96))
+
+# Sauvegarder
+img.save('static/favicon.ico', format='ICO')

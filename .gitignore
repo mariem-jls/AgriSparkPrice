@@ -1,0 +1,7 @@
+venv/
+models/*
+!models/
+*.pkl
+!models/agri_model_compact.pkl
+*.h5
+*.sav

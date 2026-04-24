@@ -1,0 +1,361 @@
+/* Styles spécifiques à la page de prédiction de prix */
+
+.price-prediction-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.price-prediction-header h1 {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+}
+
+/* Formulaires de prédiction */
+.price-form .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+/* Résultats de prédiction */
+.price-results {
+    margin-top: 40px;
+}
+
+.price-summary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+
+.price-summary h3 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.price-timeline {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: var(--card-shadow);
+}
+
+.timeline-item {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-left: 4px solid var(--primary-green);
+    margin-bottom: 15px;
+    background: #f8f9fa;
+    border-radius: 0 10px 10px 0;
+    transition: var(--transition);
+}
+
+.timeline-item:hover {
+    background: #e8f5e9;
+    transform: translateX(5px);
+}
+
+.year-badge {
+    background: var(--primary-green);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    margin-right: 20px;
+    min-width: 100px;
+    text-align: center;
+}
+
+.price-info {
+    flex-grow: 1;
+}
+
+.price-value {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.variation {
+    font-weight: 600;
+    margin-left: 15px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+}
+
+.variation.positive {
+    background: rgba(39, 174, 96, 0.1);
+    color: var(--primary-green);
+}
+
+.variation.negative {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+/* Tendance */
+.trend-analysis {
+    background: var(--primary-light);
+    border-radius: 10px;
+    padding: 25px;
+    margin-top: 30px;
+}
+
+.trend-analysis h4 {
+    color: var(--primary-dark);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.trend-list {
+    list-style: none;
+    padding: 0;
+}
+
+.trend-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.trend-list li:last-child {
+    border-bottom: none;
+}
+
+.global-trend {
+    font-weight: 600;
+    color: var(--primary-green);
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px solid var(--primary-green);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .timeline-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .year-badge {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+}
+/* Styles spécifiques pour la page de prédiction de prix */
+
+.price-prediction-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--primary-light);
+}
+
+.price-prediction-header h1 {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+}
+
+.price-prediction-header .subtitle {
+    font-size: 1.1rem;
+    color: var(--text-light);
+}
+
+/* Formulaires de prédiction */
+.price-form .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+/* Résultats de prédiction */
+.price-results {
+    margin-top: 40px;
+}
+
+.price-summary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.price-summary h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Timeline des prix */
+.price-timeline {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 30px;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-left: 4px solid var(--primary-green);
+    margin-bottom: 15px;
+    background: #f8f9fa;
+    border-radius: 0 10px 10px 0;
+    transition: var(--transition);
+}
+
+.timeline-item:hover {
+    background: #e8f5e9;
+    transform: translateX(5px);
+}
+
+.year-badge {
+    background: var(--primary-green);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    margin-right: 20px;
+    min-width: 100px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.price-info {
+    flex-grow: 1;
+}
+
+.price-value {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.variation {
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+}
+
+.variation.positive {
+    background: rgba(39, 174, 96, 0.1);
+    color: var(--primary-green);
+}
+
+.variation.negative {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+/* Analyse des tendances */
+.trend-analysis {
+    background: var(--primary-light);
+    border-radius: 10px;
+    padding: 25px;
+    margin-top: 30px;
+}
+
+.trend-analysis h4 {
+    color: var(--primary-dark);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.trend-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.trend-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.trend-list li:last-child {
+    border-bottom: none;
+}
+
+.global-trend {
+    font-weight: 600;
+    color: var(--primary-green);
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px solid var(--primary-green);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Classes de couleur pour les icônes */
+.text-success { color: var(--primary-green); }
+.text-danger { color: #e74c3c; }
+.text-warning { color: var(--accent-yellow); }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .price-form .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .timeline-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .year-badge {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    
+    .price-info {
+        width: 100%;
+    }
+    
+    .price-results > div > div {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Animation pour les résultats */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.timeline-item {
+    animation: slideIn 0.5s ease-out forwards;
+    animation-delay: calc(var(--item-index, 0) * 0.1s);
+}

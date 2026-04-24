@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Prédiction de Prix Agricoles - AgriSpark{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/price-pred.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="price-prediction-header fade-in">
+    <h1><i class="fas fa-chart-line"></i> Prédiction de Prix Agricoles</h1>
+    <p class="subtitle">Anticipez l'évolution des marchés agricoles avec notre intelligence artificielle</p>
+</div>
+
+<div class="form-container price-form fade-in">
+    <form method="POST">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="area_name"><i class="fas fa-globe-europe"></i> Pays</label>
+                <select id="area_name" name="area_name" class="form-control" required>
+                    <option value="">Sélectionnez un pays</option>
+                    {% for country in countries %}
+                    <option value="{{ country }}" 
+                        {% if form_data and form_data['area_name'] == country %}selected{% endif %}>
+                        {{ country }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-help">Sélectionnez le pays d'analyse</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="item_name"><i class="fas fa-apple-alt"></i> Produit Agricole</label>
+                <select id="item_name" name="item_name" class="form-control" required>
+                    <option value="">Sélectionnez un produit</option>
+                    {% for item in items %}
+                    <option value="{{ item }}" 
+                        {% if form_data and form_data['item_name'] == item %}selected{% endif %}>
+                        {{ item }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-help">Choisissez le produit à analyser</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="base_year"><i class="fas fa-calendar-alt"></i> Année de Base</label>
+                <input type="number" id="base_year" name="base_year" 
+                       class="form-control"
+                       value="{{ form_data['base_year'] if form_data else '' }}" 
+                       min="1991" max="2024" required
+                       placeholder="Ex: 2023">
+                <div class="form-help">Dernière année avec données connues</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="num_future"><i class="fas fa-forward"></i> Horizon de Prédiction</label>
+                <input type="number" id="num_future" name="num_future" 
+                       class="form-control"
+                       value="{{ form_data['num_future'] if form_data else '1' }}" 
+                       min="1" max="5" required>
+                <div class="form-help">Nombre d'années futures à prédire (1-5 ans)</div>
+            </div>
+        </div>
+        
+        <div style="background: var(--primary-light); padding: 25px; border-radius: 10px; margin: 30px 0;">
+            <h3 style="color: var(--primary-dark); margin-bottom: 20px;">
+                <i class="fas fa-history"></i> Historique des Prix (USD)
+            </h3>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="price_minus2">Année {{ '{{ base_year - 2 }}' }}</label>
+                    <input type="number" id="price_minus2" name="price_minus2" 
+                           class="form-control"
+                           value="{{ form_data['price_minus2'] if form_data else '' }}" 
+                           step="0.01" min="0" required
+                           placeholder="Prix il y a 2 ans">
+                    <div class="form-help">Ex: 2021 si année base = 2023</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="price_minus1">Année {{ '{{ base_year - 1 }}' }}</label>
+                    <input type="number" id="price_minus1" name="price_minus1" 
+                           class="form-control"
+                           value="{{ form_data['price_minus1'] if form_data else '' }}" 
+                           step="0.01" min="0" required
+                           placeholder="Prix l'année dernière">
+                    <div class="form-help">Ex: 2022 si année base = 2023</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="base_price">Année {{ '{{ base_year }}' }} (Référence)</label>
+                    <input type="number" id="base_price" name="base_price" 
+                           class="form-control"
+                           value="{{ form_data['base_price'] if form_data else '' }}" 
+                           step="0.01" min="0" required
+                           placeholder="Prix actuel">
+                    <div class="form-help">Prix de référence pour l'année de base</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-brain"></i> Lancer la Prédiction
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if results %}
+    {% if results.error %}
+    <div class="alert alert-error fade-in">
+        <h3><i class="fas fa-exclamation-triangle"></i> Erreur</h3>
+        <p>{{ results.error }}</p>
+    </div>
+    {% else %}
+    <div class="price-results fade-in">
+        <div class="price-summary">
+            <h3>
+                <i class="fas fa-chart-line"></i>
+                Évolution des Prix pour {{ results.item }} en {{ results.country }}
+            </h3>
+            <p style="opacity: 0.9;">Période d'analyse : {{ results.base_year }} - {{ results.base_year + results.predictions|length }}</p>
+        </div>
+        
+        <div class="price-timeline">
+            <div class="timeline-item">
+                <div class="year-badge">{{ results.base_year }}</div>
+                <div class="price-info">
+                    <div class="price-value">{{ results.base_price }} USD</div>
+                    <div style="color: var(--text-light); font-size: 0.9rem;">Prix de référence</div>
+                </div>
+            </div>
+            
+            {% for i in range(results.predictions|length) %}
+            <div class="timeline-item">
+                <div class="year-badge">{{ results.predictions[i][0] }}</div>
+                <div class="price-info">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div class="price-value">{{ results.predictions[i][1] }} USD</div>
+                        <div class="variation {% if results.variations[i]|float > 0 %}positive{% else %}negative{% endif %}">
+                            {% if results.variations[i]|float > 0 %}+{% endif %}{{ results.variations[i] }}%
+                        </div>
+                    </div>
+                    <div style="color: var(--text-light); font-size: 0.9rem;">
+                        vs {{ results.base_year + i }}: {{ results.tendances[i] }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div style="background: white; border-radius: 15px; padding: 30px; margin-top: 30px; box-shadow: var(--card-shadow);">
+            <h3 style="color: var(--primary-dark); margin-bottom: 25px;">
+                <i class="fas fa-chart-pie"></i> Analyse des Tendances
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div style="text-align: center; padding: 20px; background: var(--primary-light); border-radius: 10px;">
+                    <div style="font-size: 2rem; color: var(--primary-green); font-weight: bold;">
+                        {{ results.variation_totale }}%
+                    </div>
+                    <div style="color: var(--text-dark); font-weight: 600; margin-top: 10px;">
+                        Évolution totale
+                    </div>
+                </div>
+                
+                <div style="text-align: center; padding: 20px; background: var(--primary-light); border-radius: 10px;">
+                    <div style="font-size: 2rem; color: var(--primary-dark); font-weight: bold;">
+                        {{ results.predictions|length }} ans
+                    </div>
+                    <div style="color: var(--text-dark); font-weight: 600; margin-top: 10px;">
+                        Horizon de prédiction
+                    </div>
+                </div>
+                
+                <div style="text-align: center; padding: 20px; background: var(--primary-light); border-radius: 10px;">
+                    <div style="font-size: 2rem; 
+                        {% if results.tendance_globale == 'Hausse' %}color: var(--primary-green);
+                        {% elif results.tendance_globale == 'Baisse' %}color: #e74c3c;
+                        {% else %}color: var(--accent-yellow);{% endif %}
+                        font-weight: bold;">
+                        {{ results.tendance_globale }}
+                    </div>
+                    <div style="color: var(--text-dark); font-weight: 600; margin-top: 10px;">
+                        Tendance globale
+                    </div>
+                </div>
+            </div>
+            
+            <div class="trend-analysis" style="margin-top: 30px;">
+                <h4><i class="fas fa-lightbulb"></i> Recommandations Stratégiques</h4>
+                <ul class="trend-list">
+                    {% for i in range(results.variations|length) %}
+                    <li>
+                        <i class="fas 
+                            {% if results.variations[i]|float > 5 %}fa-arrow-up text-success
+                            {% elif results.variations[i]|float < -5 %}fa-arrow-down text-danger
+                            {% else %}fa-minus text-warning{% endif %}"></i>
+                        {{ results.base_year + i }} → {{ results.base_year + i + 1 }} : 
+                        <strong>{{ results.tendances[i] }}</strong> 
+                        ({{ results.variations[i] }}%)
+                    </li>
+                    {% endfor %}
+                </ul>
+                
+                <div class="global-trend">
+                    <i class="fas 
+                        {% if results.tendance_globale == 'Hausse' %}fa-chart-line text-success
+                        {% elif results.tendance_globale == 'Baisse' %}fa-chart-line text-danger
+                        {% else %}fa-chart-bar text-warning{% endif %}"></i>
+                    Tendance globale : <strong>{{ results.tendance_globale }}</strong>
+                </div>
+                
+                {% if results.tendance_globale == 'Hausse' %}
+                <div style="margin-top: 20px; padding: 15px; background: rgba(39, 174, 96, 0.1); border-radius: 8px;">
+                    <i class="fas fa-check-circle" style="color: var(--primary-green);"></i>
+                    <strong>Conseil :</strong> Cette tendance haussière suggère une opportunité d'investissement 
+                    ou de production accrue pour {{ results.item }}.
+                </div>
+                {% elif results.tendance_globale == 'Baisse' %}
+                <div style="margin-top: 20px; padding: 15px; background: rgba(231, 76, 60, 0.1); border-radius: 8px;">
+                    <i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i>
+                    <strong>Attention :</strong> Cette tendance baissière suggère une prudence dans les investissements 
+                    pour {{ results.item }}.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endif %}
+
+<div style="text-align: center; margin-top: 40px;">
+    <a href="{{ url_for('price_prediction') }}" class="btn-secondary">
+        <i class="fas fa-arrow-left"></i> Retour au menu principal
+    </a>
+</div>
+{% endblock %}
