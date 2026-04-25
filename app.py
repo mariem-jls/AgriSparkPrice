@@ -8,6 +8,8 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
+DEPLOY_MARKER = "api-v2-2026-04-25"
+print(f"Deploy marker: {DEPLOY_MARKER}")
 
 MODEL_CANDIDATES = [
     os.getenv("PRICE_MODEL_PATH", "").strip(),
